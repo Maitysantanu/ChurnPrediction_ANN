@@ -5,10 +5,9 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder, OneHotEncoder
 import pandas as pd
 import pickle
 
-# Load the trained model
-model = tf.keras.models.load_model('model.h5')
 
-# Load the encoders and scaler
+model = tf.keras.models.load_model("model.h5", compile=False)
+
 with open('onehot_encoder.pkl', 'rb') as file:
     onehot_encoder_geo = pickle.load(file)
 
@@ -33,9 +32,8 @@ has_crcard = st.selectbox("Has Credit Card?", ["Yes", "No"])
 is_active_member = st.selectbox("Is Active Member?", ["Yes", "No"])
 estimated_salary = st.number_input("Estimated Salary", min_value=0, step=100)
 
-# 🔘 Submit button
 if st.button("Submit"):
-    # Prepare input data
+    
     input_data = pd.DataFrame({
         "CreditScore": [credit_score],
         "Geography": [geography],
@@ -49,25 +47,25 @@ if st.button("Submit"):
         "EstimatedSalary": [estimated_salary],
     })
 
-    # One-hot encode Geography
+    
     geo_encoded = onehot_encoder_geo.transform([[geography]]).toarray()
     geo_encoded_df = pd.DataFrame(
         geo_encoded,
         columns=onehot_encoder_geo.get_feature_names_out(['Geography'])
     )
 
-    # Merge encoded geography with other inputs
+    
     input_data.drop(columns=['Geography'], inplace=True)
     input_data_df = pd.concat([input_data, geo_encoded_df], axis=1)
 
-    # Scale input
+    
     input_df_scaled = scaler.transform(input_data_df)
 
-    # Make prediction
+    
     prediction = model.predict(input_df_scaled)
     prediction_proba = float(prediction[0])
 
-    # Display result
+    
     if prediction_proba > 0.5:
         st.error(f'⚠️ The customer is likely to churn. Probability: {prediction_proba:.2f}')
     else:
